@@ -23,24 +23,28 @@ def get_page_xpath(url, retries=10):
             with urllib.request.urlopen(request, timeout=5) as f:
                 html = f.read()
                 break
-        except urllib.error.URLError:
-            print("URLError:try again: " + url)
+        except (urllib.error.URLError, socket.timeout):
+            print("ry again: " + url)
             retries -= 1
             time.sleep(1)
             continue
-        except socket.timeout:
-            print("read timeout: again: " + url)
-            retries -= 1
-            time.sleep(1)
-            continue
+
     if retries is 0:
         raise Exception("Timeout, stop.")
     return etree.HTML(html)
 
 
+def get_page_element(url, retries=10, select="/"):
+    return get_page_xpath(url, retries).xpath(select)
+
+
 main_page = get_page_xpath(url)
-#booklist = main_page.xpath('//div[@id="hotcontent"]//div[@class="image"]//a')
 booklist = main_page.xpath('//div[@class="l"]/div/dl//a')
+
+# booklist = get_page_element(url, select='//div[@class="l"]/div/dl//a/text() | //div[@class="l"]/div/dl//a/@href')
+# print(booklist)
+# exit(0)
+
 for book in booklist[1:]:
     book_name = book.xpath('./text()')[0].strip()
     book_url = url + book.xpath('./@href')[0].strip()
