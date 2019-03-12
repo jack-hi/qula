@@ -47,6 +47,7 @@ class CrawBqgBook:
 
     def set_save_path(self, path):
         self.save_path = path
+        return self
 
     def set_book_info_select(self, select):
         self.book_info_select = select
@@ -76,16 +77,6 @@ class CrawBqgBook:
             logging.error(e)
             return None
         alist = html.xpath(self.chapter_list_select)
-        '''
-        ret = list()
-        for a in alist:
-            curl = self.base_url + a.xpath('./@href')[0].strip()
-            if not curl.startswith('/book'): continue
-            cname = a.xpath('./text()')[0].strip()
-            ret.append((cname, curl))
-            logging.info(f'{cname} - {curl} append')
-        return ret
-        '''
         for a in alist:
             chapter_url = a.xpath('./@href')[0].strip()
             if not chapter_url.startswith('/book'): continue
@@ -130,8 +121,8 @@ if __name__ == '__main__':
     cb = CrawBqgBook('https://www.qu.la/book/101104/', 'https://www.qu.la')
     cb.set_book_info_select('//head/title/text()')\
         .set_chapter_list_select('//div[@class="box_con"][2]/div[@id="list"]/dl/dd/a')\
-        .set_chapter_content_select('//div[@id="content"]/text()')
-    cb.download()
+        .set_chapter_content_select('//div[@id="content"]/text()')\
+        .download()
 
 
 
