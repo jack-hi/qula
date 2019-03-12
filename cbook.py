@@ -8,12 +8,13 @@ import time
 import codecs
 import logging
 from lxml import etree
+from threading import Thread
 
 
 ssl._create_default_https_context = ssl._create_unverified_context
 headers = {"user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
                          "Chrome/72.0.3626.109 Safari/537.36"}
-logging.basicConfig(format="%(asctime)s: [%(levelname)s] %(message)s",
+logging.basicConfig(format="%(asctime)s: <%(thread)d> [%(levelname)s] %(message)s",
                     level=logging.DEBUG)
 
 
@@ -35,8 +36,9 @@ def get_html(url, retries=10):
     return etree.HTML(html)
 
 
-class CrawBqgBook:
+class CrawBqgBook(Thread):
     def __init__(self, url, base_url):
+        super().__init__()
         self.book_name = None
         self.book_url = url
         self.base_url = base_url
@@ -101,7 +103,7 @@ class CrawBqgBook:
         ret.append('\n\n')
         return ret
 
-    def download(self):
+    def run(self):
         self.book_name, self.book_url = self.get_book_info()
         if self.book_name is None:
             return
@@ -115,6 +117,9 @@ class CrawBqgBook:
                 file.writelines(contents)
                 logging.info(f"{self.book_name}:{cname}:{curl} download ok.")
                 time.sleep(3)
+
+    def download(self):
+        self.start()
 
 
 if __name__ == '__main__':
