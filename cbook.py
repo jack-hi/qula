@@ -9,6 +9,7 @@ import codecs
 import logging
 from lxml import etree
 from threading import Thread
+from urllib.parse import urlparse
 
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -37,11 +38,12 @@ def get_html(url, retries=10):
 
 
 class CrawBqgBook(Thread):
-    def __init__(self, url, base_url):
+    def __init__(self, url):
         super().__init__()
         self.book_name = None
         self.book_url = url
-        self.base_url = base_url
+        p = urlparse(url)
+        self.base_url = p.scheme + '://' + p.netloc
         self.save_path = ''
         self.book_info_select = None
         self.chapter_list_select = None
