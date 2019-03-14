@@ -8,7 +8,7 @@ import time
 import codecs
 import logging
 from lxml import etree
-from threading import Thread
+import threading
 from urllib.parse import urlparse
 
 
@@ -37,7 +37,7 @@ def get_html(url, retries=10):
     return etree.HTML(html)
 
 
-class CrawBqgBook(Thread):
+class CrawBqgBook(threading.Thread):
     def __init__(self, url):
         super().__init__()
         self.book_name = None
@@ -124,12 +124,29 @@ class CrawBqgBook(Thread):
         self.start()
 
 
+def get_bqg_booklist():
+    home = get_html('https://www.qu.la/wanbenxiaoshuo/')
+    bl = home.xpath('//div[@id="tabData_1"]/div[1]/ul/li/a/@href')
+    return ['http://www.qu.la' + l for l in bl]
+
+
 if __name__ == '__main__':
-    cb = CrawBqgBook('https://www.qu.la/book/101104/', 'https://www.qu.la')
-    cb.set_book_info_select('//head/title/text()')\
-        .set_chapter_list_select('//div[@class="box_con"][2]/div[@id="list"]/dl/dd/a')\
-        .set_chapter_content_select('//div[@id="content"]/text()')\
-        .download()
+
+    booklist = get_bqg_booklist()
+    max_thread = 3 + 1
+
+    while True:
+        if len(booklist) is 0:
+            break
+        if threading.active_count() is max_thread:
+            time.sleep(10)
+            continue
+        CrawBqgBook(booklist.pop()) \
+            .set_save_path('/tmp/book/')\
+            .set_book_info_select('//head/title/text()') \
+            .set_chapter_list_select('//div[@class="box_con"][2]/div[@id="list"]/dl/dd/a') \
+            .set_chapter_content_select('//div[@id="content"]/text()') \
+            .download()
 
 
 
